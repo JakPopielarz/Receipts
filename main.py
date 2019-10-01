@@ -7,11 +7,13 @@ from PIL import Image, ImageTk
 class Window():
     def __init__(self):
         self.root = tk.Tk()
-        
+
+        self.selection_topleft_coords = []
+
         # set up for the photo - create a scrollable canvas
         self.photo_frame = tk.Frame(self.root)
         self.photo_frame.grid()
-        
+
         self.canvas = tk.Canvas(self.photo_frame, width=500, height=500)
 
         # create and set horizontal scrollbar for the photo
@@ -23,7 +25,7 @@ class Window():
         self.scroll_y = tk.Scrollbar(self.photo_frame, orient="vertical",
                                      command=self.canvas.yview)
         self.scroll_y.pack(side="right", fill="y")
-        
+
         self.canvas.configure(yscrollcommand=self.scroll_y.set,
                               xscrollcommand=self.scroll_x.set)
         self.canvas.pack(side="left", fill="both", expand=True)
@@ -34,7 +36,10 @@ class Window():
 
 
         # set up canvas for selecting with drawing a rectangle
-        self.canvas.bind("<Button-1>", self.draw_rectangle)
+        self.canvas.bind("<Button-1>", self.draw_selection)
+        self.canvas.bind("<B1-Motion>", self.update_selection)
+        # that is deleted on mouse button release
+        self.canvas.bind("<ButtonRelease-1>", self.delete_selection)
 
         again_button = tk.Button(self.root, text="Load photo",
                                  command=self.load_photo)
@@ -54,16 +59,36 @@ class Window():
         except AttributeError: # if nothing was chosen
             self.canvas.configure(text="File not chosen")
 
-    def draw_rectangle(self, event):
+    def draw_selection(self, event):
         # convert coordinates of mouse on window to coordinates on canvas
         canvas_x, canvas_y = self.canvas.canvasx(0), self.canvas.canvasy(0)
-        
+
+        self.selection_topleft_coords = [canvas_x+event.x, canvas_y+event.y]
+
         # create a rectangle on canvas with top left coner in place of the click
-        self.canvas.create_rectangle(canvas_x + event.x, 
-                                     canvas_y + event.y, 
-                                     canvas_x + event.x + 20,
-                                     canvas_y + event.y + 20,
+        self.canvas.create_rectangle(self.selection_topleft_coords[0],
+                                     self.selection_topleft_coords[1],
+                                     self.selection_topleft_coords[0],
+                                     self.selection_topleft_coords[1],
                                      outline="red", tags="selection")
+
+    def update_selection(self, event):
+        # convert coordinates of mouse on window to coordinates on canvas
+        canvas_x, canvas_y = self.canvas.canvasx(0), self.canvas.canvasy(0)
+
+        # delete old selection
+        self.canvas.delete("selection")
+
+        # create new selection - from place clicked to current mouse position (if LMB held)
+        self.canvas.create_rectangle(self.selection_topleft_coords[0],
+                                     self.selection_topleft_coords[1],
+                                     canvas_x+event.x,
+                                     canvas_y+event.y,
+                                     outline="red", tags="selection")
+        
+
+    def delete_selection(self, event):
+        self.canvas.delete("selection")
 
 def main():
     window = Window()
