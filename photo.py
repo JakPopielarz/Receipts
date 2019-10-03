@@ -12,4 +12,6 @@ class Photo(Image.Image):
     
     def change_image(self, image):
         self.image = image
-        
+
+    def bicolorize(self):
+        self.image = self.image.convert("1", dither=Image.NONE)

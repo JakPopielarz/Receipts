@@ -54,6 +54,7 @@ class Window():
                                                                ("all files", "*.*")))
             self.image = photo.Photo(image_path)
             self.set_canvas_photo()
+            self.canvas.focus_set()
         except OSError: # if user chose a file which is not an image
             self.canvas.delete("photo")
             self.canvas.create_text(400, 300, tag="text",
@@ -76,7 +77,10 @@ class Window():
         self.canvas.bind("<Button-1>", self.draw_selection)
         self.canvas.bind("<B1-Motion>", self.update_selection)
         # that is deleted on mouse button release
-        self.canvas.bind("<ButtonRelease-1>", self.delete_selection)
+        self.canvas.bind("<ButtonRelease-1>", self.select)
+        
+        # set up a shortcut to select the whole image
+        self.canvas.bind("a", self.select_all)
 
     def draw_selection(self, event):
         if self.canvas.find_withtag("photo"):
@@ -110,13 +114,14 @@ class Window():
                                          canvas_y+event.y,
                                          outline="red", tags="selection")
 
-    def delete_selection(self, event):
+    def select(self, event):
         if self.canvas.find_withtag("photo"):
             self.rectify_selection_coords()
 
             # crop and swap the image stored
             cropped = self.image.get_PIL().crop(self.selection_coords)
             self.image.change_image(cropped)
+            self.image.bicolorize()
 
             # swap displayed image
             self.canvas.delete("photo")
@@ -128,6 +133,12 @@ class Window():
 
             # delete the selection rectangle
             self.canvas.delete("selection")
+
+    def select_all(self, event):
+        self.selection_coords = [0, 0,
+                                 self.canvas.image.width(),
+                                 self.canvas.image.height()]
+        self.select(event)
 
     def rectify_selection_coords(self):
         # if needed swap coordinates so they define a rectanle in order:
@@ -145,8 +156,9 @@ class Window():
         self.selection_coords[3] = min(self.selection_coords[3],
                                        self.canvas.image.height())
 
+        # delete the image if whole selection outside of it
         if self.selection_coords[0] > self.canvas.image.width() or \
-           self.selection_coords[1] > self.canvas.image.height():
+            self.selection_coords[1] > self.canvas.image.height():
                self.canvas.delete("photo")
                self.canvas.create_text(400, 300, tag="text",
                                        text="File not chosen")
