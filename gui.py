@@ -79,57 +79,74 @@ class Window():
         self.canvas.bind("<ButtonRelease-1>", self.delete_selection)
 
     def draw_selection(self, event):
-        # convert coordinates of mouse on window to coordinates on canvas
-        canvas_x, canvas_y = self.canvas.canvasx(0), self.canvas.canvasy(0)
+        if self.canvas.find_withtag("photo"):
+            # convert coordinates of mouse on window to coordinates on canvas
+            canvas_x, canvas_y = self.canvas.canvasx(0), self.canvas.canvasy(0)
 
-        self.selection_coords = [canvas_x+event.x, canvas_y+event.y, 0, 0]
+            self.selection_coords = [canvas_x+event.x, canvas_y+event.y, 0, 0]
 
-        # create a rectangle on canvas with top left coner in place of the click
-        self.canvas.create_rectangle(self.selection_coords[0],
-                                     self.selection_coords[1],
-                                     self.selection_coords[0],
-                                     self.selection_coords[1],
-                                     outline="red", tags="selection")
+            # create a rectangle on canvas with top left coner in place of the click
+            self.canvas.create_rectangle(self.selection_coords[0],
+                                         self.selection_coords[1],
+                                         self.selection_coords[0],
+                                         self.selection_coords[1],
+                                         outline="red", tags="selection")
 
     def update_selection(self, event):
-        # convert coordinates of mouse on window to coordinates on canvas
-        canvas_x, canvas_y = self.canvas.canvasx(0), self.canvas.canvasy(0)
+        if self.canvas.find_withtag("photo"):
+            # convert coordinates of mouse on window to coordinates on canvas
+            canvas_x, canvas_y = self.canvas.canvasx(0), self.canvas.canvasy(0)
 
-        self.selection_coords[2] = canvas_x+event.x
-        self.selection_coords[3] = canvas_y+event.y
+            self.selection_coords[2] = canvas_x+event.x
+            self.selection_coords[3] = canvas_y+event.y
 
-        # delete old selection
-        self.canvas.delete("selection")
+            # delete old selection
+            self.canvas.delete("selection")
 
-        # create new selection - from place clicked to current mouse position (if LMB held)
-        self.canvas.create_rectangle(self.selection_coords[0],
-                                     self.selection_coords[1],
-                                     canvas_x+event.x,
-                                     canvas_y+event.y,
-                                     outline="red", tags="selection")
+            # create new selection - from place clicked to current mouse position (if LMB held)
+            self.canvas.create_rectangle(self.selection_coords[0],
+                                         self.selection_coords[1],
+                                         canvas_x+event.x,
+                                         canvas_y+event.y,
+                                         outline="red", tags="selection")
 
     def delete_selection(self, event):
-        self.rectify_selection_coords()
-        
-        # crop and swap the image stored
-        cropped = self.image.get_PIL().crop(self.selection_coords)
-        self.image.change_image(cropped)
+        if self.canvas.find_withtag("photo"):
+            self.rectify_selection_coords()
 
-        # swap displayed image
-        self.canvas.delete("photo")
-        self.set_canvas_photo()
+            # crop and swap the image stored
+            cropped = self.image.get_PIL().crop(self.selection_coords)
+            self.image.change_image(cropped)
 
-        # move scrollbars to the upmost(vertical)/leftmost(horizontal) position
-        self.canvas.yview_moveto(0)
-        self.canvas.xview_moveto(0)
+            # swap displayed image
+            self.canvas.delete("photo")
+            self.set_canvas_photo()
 
-        # delete the selection rectangle
-        self.canvas.delete("selection")
+            # move scrollbars to the upmost(vertical)/leftmost(horizontal) position
+            self.canvas.yview_moveto(0)
+            self.canvas.xview_moveto(0)
+
+            # delete the selection rectangle
+            self.canvas.delete("selection")
 
     def rectify_selection_coords(self):
+        # if needed swap coordinates so they define a rectanle in order:
+        # [top_left_x, top_left_y, bottom_right_x, bottom_right_y]
         if self.selection_coords[0] > self.selection_coords[2]:
             self.selection_coords[0], self.selection_coords[2] =\
             self.selection_coords[2], self.selection_coords[0]
         if self.selection_coords[1] > self.selection_coords[3]:
             self.selection_coords[1], self.selection_coords[3] =\
             self.selection_coords[3], self.selection_coords[1]
+
+        # don't allow selecting outside the image
+        self.selection_coords[2] = min(self.selection_coords[2],
+                                       self.canvas.image.width())
+        self.selection_coords[3] = min(self.selection_coords[3],
+                                       self.canvas.image.height())
+
+        if self.selection_coords[0] > self.canvas.image.width() or \
+           self.selection_coords[1] > self.canvas.image.height():
+               self.canvas.delete("photo")
+               self.canvas.create_text(400, 300, tag="text",
+                                       text="File not chosen")
