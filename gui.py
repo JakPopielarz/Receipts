@@ -8,7 +8,7 @@ import photo
 class Window():
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title = "Receipts"
+        self.root.title("Receipts")
         self.selection_coords = []
 
         # set up for the photo - create a scrollable canvas
@@ -121,7 +121,7 @@ class Window():
             # crop and swap the image stored
             cropped = self.image.get_PIL().crop(self.selection_coords)
             self.image.change_image(cropped)
-            self.image.bicolorize()
+            self.image.draw_contours()
 
             # swap displayed image
             self.canvas.delete("photo")
