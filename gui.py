@@ -78,7 +78,7 @@ class Window():
         self.canvas.bind("<B1-Motion>", self.update_selection)
         # that is deleted on mouse button release
         self.canvas.bind("<ButtonRelease-1>", self.select)
-        
+
         # set up a shortcut to select the whole image
         self.canvas.bind("a", self.select_all)
 
@@ -114,14 +114,16 @@ class Window():
                                          canvas_y+event.y,
                                          outline="red", tags="selection")
 
-    def select(self, event):
+    def select(self, _):
         if self.canvas.find_withtag("photo"):
             self.rectify_selection_coords()
 
             # crop and swap the image stored
-            cropped = self.image.get_PIL().crop(self.selection_coords)
-            self.image.change_image(cropped)
+            self.image.crop_image(self.selection_coords)
+#            self.image.change_image(cropped)
             self.image.draw_contours()
+            self.image.create_bounding_rectangles()
+            self.image.draw_bounding_rectangles()
 
             # swap displayed image
             self.canvas.delete("photo")
@@ -158,7 +160,7 @@ class Window():
 
         # delete the image if whole selection outside of it
         if self.selection_coords[0] > self.canvas.image.width() or \
-            self.selection_coords[1] > self.canvas.image.height():
-               self.canvas.delete("photo")
-               self.canvas.create_text(400, 300, tag="text",
-                                       text="File not chosen")
+        self.selection_coords[1] > self.canvas.image.height():
+            self.canvas.delete("photo")
+            self.canvas.create_text(400, 300, tag="text",
+                                    text="File not chosen")
