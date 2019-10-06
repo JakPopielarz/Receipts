@@ -20,15 +20,16 @@ class Photo(Image.Image):
     def change_image(self, image):
         self.image = image
 
-    def draw_contours(self):
+    def create_contours(self):
         cv2_image = self.PIL_to_cv2()
 
         prepared_image = self.transform_cv2_image(cv2_image)
-
         self.contours = self.find_contours(prepared_image)
-        cv2.drawContours(cv2_image, self.contours, -1, (0, 255, 0), 1)
 
         self.cv2_to_PIL(cv2_image)
+
+    def draw_contours(self, cv2_image):
+        cv2.drawContours(cv2_image, self.contours, -1, (0, 255, 0), 1)
 
     def PIL_to_cv2(self):
         # load the image as a cv2 object
@@ -66,8 +67,8 @@ class Photo(Image.Image):
     def create_bounding_rectangles(self):
         for contour in self.contours:
             x, y, width, height = cv2.boundingRect(contour)
-#            if height > 30:
-            self.bounding_rectangles.append([x, y, x+width, y+height])
+            if height > 30:
+                self.bounding_rectangles.append([x, y, x+width, y+height])
 
     def draw_bounding_rectangles(self):
         for rectangle in self.bounding_rectangles:
@@ -79,8 +80,6 @@ class Photo(Image.Image):
         self.image = ImageEnhance.Contrast(self.image).enhance(10000)
         image = self.image.filter(ImageFilter.SHARPEN)
         for rectangle in self.bounding_rectangles:
-            rectangle[2] -= rectangle[0]
-            rectangle[3] -= rectangle[1]
             rectangle[0] += 1
             rectangle[1] += 1
             cropped = image.crop(rectangle)

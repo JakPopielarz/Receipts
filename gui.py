@@ -120,8 +120,8 @@ class Window():
 
             # crop and swap the image stored
             self.image.crop_image(self.selection_coords)
-#            self.image.change_image(cropped)
-            self.image.draw_contours()
+            self.image.create_contours()
+#            self.image.draw_contours()
             self.image.create_bounding_rectangles()
             self.image.draw_bounding_rectangles()
 
