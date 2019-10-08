@@ -9,7 +9,17 @@ class Photo(Image.Image):
     def __init__(self, image_path):
         super().__init__()
         self.image = Image.open(image_path)
+        self.image.thumbnail((600, 600), Image.ANTIALIAS)
         self.bounding_rectangles = []
+        self.samples = np.empty((0, 100))
+        self.responses = []
+        self.model = cv2.KNearest()
+        try:
+            open("generalresponses.data")
+            open("generalsamples.data")
+            self.train()
+        except FileNotFoundError:
+            pass
 
     def crop_image(self, coordinates):
         self.image = self.image.crop(coordinates)
@@ -19,17 +29,18 @@ class Photo(Image.Image):
 
     def change_image(self, image):
         self.image = image
+        self.image.thumbnail((600, 600), Image.ANTIALIAS)
 
     def create_contours(self):
+#        self.image = ImageEnhance.Contrast(self.image).enhance(10)
+#        self.image = self.image.filter(ImageFilter.SHARPEN)
+
         cv2_image = self.PIL_to_cv2()
 
         prepared_image = self.transform_cv2_image(cv2_image)
         self.contours = self.find_contours(prepared_image)
 
         self.cv2_to_PIL(cv2_image)
-
-    def draw_contours(self, cv2_image):
-        cv2.drawContours(cv2_image, self.contours, -1, (0, 255, 0), 1)
 
     def PIL_to_cv2(self):
         # load the image as a cv2 object
@@ -64,17 +75,25 @@ class Photo(Image.Image):
         # clean up after conversion
         os.remove("tmp.png")
 
+    def draw_contours(self, cv2_image):
+        cv2.drawContours(cv2_image, self.contours, -1, (0, 255, 0), 1)
+
     def create_bounding_rectangles(self):
         for contour in self.contours:
             x, y, width, height = cv2.boundingRect(contour)
+# TODO: Change the hard-coded 30
             if height > 30:
                 self.bounding_rectangles.append([x, y, x+width, y+height])
+
+    def draw_bounding_rectangle(self, rectangle):
+        draw = ImageDraw.Draw(self.image)
+        draw.rectangle(rectangle, outline="magenta")
 
     def draw_bounding_rectangles(self):
         for rectangle in self.bounding_rectangles:
             draw = ImageDraw.Draw(self.image)
             draw.rectangle(rectangle, outline="magenta")
-        self.separate_bounding_rectangles()
+#        self.separate_bounding_rectangles()
 
     def separate_bounding_rectangles(self):
         self.image = ImageEnhance.Contrast(self.image).enhance(10000)
@@ -85,20 +104,45 @@ class Photo(Image.Image):
             cropped = image.crop(rectangle)
             name = str(rectangle[0])+".png"
             cropped.save(name)
-#            self.detect_corners(name)
-            
 
-    def detect_corners(self, name):
-        img = self.PIL_to_cv2()
-        gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-        
-        gray = np.float32(gray)
-        dst = cv2.cornerHarris(gray,2,3,0.04)
-        
-        #result is dilated for marking the corners, not important
-        dst = cv2.dilate(dst,None)
-        
-        # Threshold for an optimal value, it may vary depending on the image.
-        img[dst>0.01*dst.max()]=[0,0,255]
-        
-        cv2.imwrite("crn_"+name, img)
+    def prepare_sample(self, iteration):
+        im = self.PIL_to_cv2()
+        im = self.transform_cv2_image(im)
+
+        rectangle = self.bounding_rectangles[iteration]
+
+        roi = im[rectangle[1]:rectangle[3], rectangle[0]:rectangle[2]]
+        roi_small = cv2.resize(roi, (10, 10))
+
+        draw = ImageDraw.Draw(self.image)
+        draw.rectangle(rectangle, outline="red")
+
+        return roi_small
+
+    def gather_answer(self, iteration):
+        key = input("Digit: ")
+        if key in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+            self.responses.append(int(key))
+
+        rectangle = self.bounding_rectangles[iteration]
+        draw = ImageDraw.Draw(self.image)
+        draw.rectangle(rectangle, outline="blue")
+
+    def add_sample(self, roi):
+        sample = roi.reshape((1, 100))
+        self.samples = np.append(self.samples, sample, 0)
+
+    def save_results(self):
+        self.responses = np.array(self.responses, np.float32)
+        self.responses = self.responses.reshape((self.responses.size, 1))
+        print("training complete")
+
+        np.savetxt('generalsamples.data', self.samples)
+        np.savetxt('generalresponses.data', self.responses)
+
+    def train(self):
+        self.samples = np.loadtxt('generalsamples.data', np.float32)
+        self.responses = np.loadtxt('generalresponses.data', np.float32)
+        self.responses = self.responses.reshape((self.responses.size, 1))
+
+        self.model.train(self.samples, self.responses)

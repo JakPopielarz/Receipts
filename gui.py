@@ -10,6 +10,7 @@ class Window():
         self.root = tk.Tk()
         self.root.title("Receipts")
         self.selection_coords = []
+        self.number = 0
 
         # set up for the photo - create a scrollable canvas
         self.photo_frame = tk.Frame(self.root)
@@ -114,6 +115,12 @@ class Window():
                                          canvas_y+event.y,
                                          outline="red", tags="selection")
 
+    def select_all(self, event):
+        self.selection_coords = [0, 0,
+                                 self.canvas.image.width(),
+                                 self.canvas.image.height()]
+        self.select(event)
+
     def select(self, _):
         if self.canvas.find_withtag("photo"):
             self.rectify_selection_coords()
@@ -123,6 +130,9 @@ class Window():
             self.image.create_contours()
 #            self.image.draw_contours()
             self.image.create_bounding_rectangles()
+
+            self.teach()
+
             self.image.draw_bounding_rectangles()
 
             # swap displayed image
@@ -135,12 +145,6 @@ class Window():
 
             # delete the selection rectangle
             self.canvas.delete("selection")
-
-    def select_all(self, event):
-        self.selection_coords = [0, 0,
-                                 self.canvas.image.width(),
-                                 self.canvas.image.height()]
-        self.select(event)
 
     def rectify_selection_coords(self):
         # if needed swap coordinates so they define a rectanle in order:
@@ -164,3 +168,16 @@ class Window():
             self.canvas.delete("photo")
             self.canvas.create_text(400, 300, tag="text",
                                     text="File not chosen")
+
+    def teach(self):
+        for i in range(len(self.image.bounding_rectangles)):
+            roi = self.image.prepare_sample(i)
+
+            self.canvas.delete("photo")
+            self.set_canvas_photo()
+            self.root.update()
+
+            self.image.gather_answer(i)
+            self.image.add_sample(roi)
+
+        self.image.save_results()
