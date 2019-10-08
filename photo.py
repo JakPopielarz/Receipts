@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from PIL import Image, ImageFilter, ImageEnhance, ImageDraw, ImageFont
+from PIL import Image, ImageFilter, ImageEnhance, ImageDraw
 import cv2
 import numpy as np
 
@@ -18,6 +18,10 @@ class Photo(Image.Image):
             open("generalresponses.data")
             open("generalsamples.data")
             self.train()
+
+            self.responses = self.responses.flatten()
+            self.responses = self.responses.tolist()
+            print(self.responses)
         except FileNotFoundError:
             pass
 

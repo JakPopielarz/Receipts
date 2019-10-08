@@ -82,6 +82,8 @@ class Window():
 
         # set up a shortcut to select the whole image
         self.canvas.bind("a", self.select_all)
+        # if detected wrongly - teach the algorithm
+        self.canvas.bind("x", self.teach)
 
     def draw_selection(self, event):
         if self.canvas.find_withtag("photo"):
@@ -171,7 +173,7 @@ class Window():
             self.canvas.create_text(400, 300, tag="text",
                                     text="File not chosen")
 
-    def teach(self):
+    def teach(self, _=None):
         """
         Create samples so the algorigthm can learn
         """
