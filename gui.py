@@ -10,7 +10,6 @@ class Window():
         self.root = tk.Tk()
         self.root.title("Receipts")
         self.selection_coords = []
-        self.number = 0
 
         # set up for the photo - create a scrollable canvas
         self.photo_frame = tk.Frame(self.root)
@@ -52,6 +51,7 @@ class Window():
         try:
             image_path = filedialog.askopenfilename(title="Select photo of a receipt",
                                                     filetypes=(("jpeg files", "*.jpg"),
+                                                               ("png files", "*.png"),
                                                                ("all files", "*.*")))
             self.image = photo.Photo(image_path)
             self.set_canvas_photo()
@@ -131,9 +131,11 @@ class Window():
 #            self.image.draw_contours()
             self.image.create_bounding_rectangles()
 
-            self.teach()
+            # gather responses and learning material
+#            self.teach()
 
             self.image.draw_bounding_rectangles()
+            self.image.recognize_digits()
 
             # swap displayed image
             self.canvas.delete("photo")
@@ -170,6 +172,9 @@ class Window():
                                     text="File not chosen")
 
     def teach(self):
+        """
+        Create samples so the algorigthm can learn
+        """
         for i in range(len(self.image.bounding_rectangles)):
             roi = self.image.prepare_sample(i)
 

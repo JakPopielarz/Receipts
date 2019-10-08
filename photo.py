@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from PIL import Image, ImageFilter, ImageEnhance, ImageDraw
+from PIL import Image, ImageFilter, ImageEnhance, ImageDraw, ImageFont
 import cv2
 import numpy as np
 
@@ -9,11 +9,11 @@ class Photo(Image.Image):
     def __init__(self, image_path):
         super().__init__()
         self.image = Image.open(image_path)
-        self.image.thumbnail((600, 600), Image.ANTIALIAS)
+#        self.image.thumbnail((600, 600), Image.ANTIALIAS)
         self.bounding_rectangles = []
         self.samples = np.empty((0, 100))
         self.responses = []
-        self.model = cv2.KNearest()
+        self.model = cv2.ml.KNearest_create()
         try:
             open("generalresponses.data")
             open("generalsamples.data")
@@ -29,7 +29,7 @@ class Photo(Image.Image):
 
     def change_image(self, image):
         self.image = image
-        self.image.thumbnail((600, 600), Image.ANTIALIAS)
+#        self.image.thumbnail((600, 600), Image.ANTIALIAS)
 
     def create_contours(self):
 #        self.image = ImageEnhance.Contrast(self.image).enhance(10)
@@ -145,4 +145,17 @@ class Photo(Image.Image):
         self.responses = np.loadtxt('generalresponses.data', np.float32)
         self.responses = self.responses.reshape((self.responses.size, 1))
 
-        self.model.train(self.samples, self.responses)
+        self.model.train(self.samples, cv2.ml.ROW_SAMPLE, self.responses)
+
+    def recognize_digits(self):
+        im = self.PIL_to_cv2()
+        im = self.transform_cv2_image(im)
+        for rectangle in self.bounding_rectangles:
+            roi = im[rectangle[1]:rectangle[3], rectangle[0]:rectangle[2]]
+            roismall = cv2.resize(roi, (10, 10))
+            roismall = roismall.reshape((1, 100))
+            roismall = np.float32(roismall)
+            retval, results, neigh_resp, dists = self.model.findNearest(roismall, k=1)
+            string = str(int((results[0][0])))
+            draw = ImageDraw.Draw(self.image)
+            draw.text((rectangle[0], rectangle[1]), string, fill="green")
