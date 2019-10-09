@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from tkinter import filedialog
+from tkinter import filedialog, simpledialog
 import tkinter as tk
 from PIL import ImageTk
 import photo
@@ -186,14 +186,20 @@ class Window():
         """
         Create samples so the algorigthm can learn
         """
-        for i in range(len(self.image.bounding_rectangles)):
-            roi = self.image.prepare_sample(i)
-
-            self.canvas.delete("photo")
-            self.set_canvas_photo()
-            self.root.update()
-
-            self.image.gather_answer(i)
-            self.image.add_sample(roi)
-
-        self.image.save_results()
+#Solution for alt-tabbing: pop up a window with text entry field in which you enter
+#the sum of money and then it is saved as responses (without ",") etc etc
+        amount = simpledialog.askstring("Correct amount", 
+                                        "Enter correct amount [always with 2 digits after coma]")
+        if amount and len(amount) == len(self.image.bounding_rectangles)+1:
+            self.image.save_correct_recognition(amount)
+#        for i in range(len(self.image.bounding_rectangles)):
+#            roi = self.image.prepare_sample(i)
+#
+#            self.canvas.delete("photo")
+#            self.set_canvas_photo()
+#            self.root.update()
+#
+#            self.image.gather_answer(i)
+#            self.image.add_sample(roi)
+#
+#        self.image.save_results()
