@@ -1,5 +1,6 @@
 __pycache__/*
 *.png
+*.jpeg
 *.jpg
 .spyproject
 *.data

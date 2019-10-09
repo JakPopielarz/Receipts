@@ -82,8 +82,6 @@ class Window():
 
         # set up a shortcut to select the whole image
         self.canvas.bind("a", self.select_all)
-        # if detected wrongly - teach the algorithm
-        self.canvas.bind("x", self.teach)
 
     def draw_selection(self, event):
         if self.canvas.find_withtag("photo"):
@@ -137,7 +135,7 @@ class Window():
 #            self.teach()
 
             self.image.draw_bounding_rectangles()
-            self.image.recognize_digits()
+            recognized = self.image.recognize_digits()
 
             # swap displayed image
             self.canvas.delete("photo")
@@ -149,6 +147,17 @@ class Window():
 
             # delete the selection rectangle
             self.canvas.delete("selection")
+
+            # ask the user if digits were recognized correctly and act accordingly
+            correct = tk.messagebox.askyesno("Digit recognition",
+                                             """Were the digits recognized correctly?\n
+                                             Recognized: """+recognized)
+            if correct:
+                # add samples to the knowledge-base
+                pass
+            else:
+                # gather correct input and save it to the knowledge-base
+                self.teach()
 
     def rectify_selection_coords(self):
         # if needed swap coordinates so they define a rectanle in order:
@@ -173,7 +182,7 @@ class Window():
             self.canvas.create_text(400, 300, tag="text",
                                     text="File not chosen")
 
-    def teach(self, _=None):
+    def teach(self):
         """
         Create samples so the algorigthm can learn
         """

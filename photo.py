@@ -21,7 +21,6 @@ class Photo(Image.Image):
 
             self.responses = self.responses.flatten()
             self.responses = self.responses.tolist()
-            print(self.responses)
         except FileNotFoundError:
             pass
 
@@ -88,6 +87,7 @@ class Photo(Image.Image):
 # TODO: Change the hard-coded 30
             if height > 30:
                 self.bounding_rectangles.append([x, y, x+width, y+height])
+        self.bounding_rectangles.sort(key=lambda x: x[0])
 
     def draw_bounding_rectangle(self, rectangle):
         draw = ImageDraw.Draw(self.image)
@@ -152,14 +152,24 @@ class Photo(Image.Image):
         self.model.train(self.samples, cv2.ml.ROW_SAMPLE, self.responses)
 
     def recognize_digits(self):
-        im = self.PIL_to_cv2()
-        im = self.transform_cv2_image(im)
+        # Prepare image for recognition procedure
+        image = self.PIL_to_cv2()
+        image = self.transform_cv2_image(image)
+
+        recognized = ""
+
         for rectangle in self.bounding_rectangles:
-            roi = im[rectangle[1]:rectangle[3], rectangle[0]:rectangle[2]]
+            # transform the image fragment with a digit
+            roi = image[rectangle[1]:rectangle[3], rectangle[0]:rectangle[2]]
             roismall = cv2.resize(roi, (10, 10))
             roismall = roismall.reshape((1, 100))
             roismall = np.float32(roismall)
-            retval, results, neigh_resp, dists = self.model.findNearest(roismall, k=1)
-            string = str(int((results[0][0])))
-            draw = ImageDraw.Draw(self.image)
-            draw.text((rectangle[0], rectangle[1]), string, fill="green")
+
+            # find nearest sample in knowledge-base
+            _, results, _, _ = self.model.findNearest(roismall, k=1)
+            # add the result to the end-result string
+            recognized += str(int((results[0][0])))
+
+        recognized = recognized[:-2]+","+recognized[-2:]
+
+        return recognized
