@@ -154,7 +154,7 @@ class Window():
                                              Recognized: """+recognized)
             if correct:
                 # add samples to the knowledge-base
-                pass
+                self.image.save_correct_recognition(recognized)
             else:
                 # gather correct input and save it to the knowledge-base
                 self.teach()

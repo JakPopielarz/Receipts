@@ -109,11 +109,11 @@ class Photo(Image.Image):
             name = str(rectangle[0])+".png"
             cropped.save(name)
 
-    def prepare_sample(self, iteration):
+    def prepare_sample(self, index):
         im = self.PIL_to_cv2()
         im = self.transform_cv2_image(im)
 
-        rectangle = self.bounding_rectangles[iteration]
+        rectangle = self.bounding_rectangles[index]
 
         roi = im[rectangle[1]:rectangle[3], rectangle[0]:rectangle[2]]
         roi_small = cv2.resize(roi, (10, 10))
@@ -123,12 +123,12 @@ class Photo(Image.Image):
 
         return roi_small
 
-    def gather_answer(self, iteration):
+    def gather_answer(self, index):
         key = input("Digit: ")
         if key in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
             self.responses.append(int(key))
 
-        rectangle = self.bounding_rectangles[iteration]
+        rectangle = self.bounding_rectangles[index]
         draw = ImageDraw.Draw(self.image)
         draw.rectangle(rectangle, outline="blue")
 
@@ -173,3 +173,16 @@ class Photo(Image.Image):
         recognized = recognized[:-2]+","+recognized[-2:]
 
         return recognized
+
+    def save_correct_recognition(self, results):
+        results = results.replace(",", "")
+        for i in range(len(self.bounding_rectangles)):
+            # prepare and add sample to the knowledge-base
+            roi = self.prepare_sample(i)
+            self.add_sample(roi)
+
+            # add associated key to the knowledge-base
+            key = int(results[i])
+            self.responses.append(key)
+
+        self.save_results()
