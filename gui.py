@@ -7,16 +7,34 @@ import photo
 import database
 from receipt import Receipt
 
-class Window():
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("Receipts")
+class Window(tk.Tk):
+    def __init__(self, *args, **kwargs):
+        tk.Tk.__init__(*args, **kwargs)
+        self.title("Receipts")
+
+        container = tk.Frame(self)
+        container.pack(side="top", fill="both", expand=True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+
+        self.frames = {}
+        
+        self.show_frame("PhotoSelection")
+
+    def show_frame(self, frame_name):
+        frame = self.frames[frame_name]
+        frame.tkraise()
+
+class PhotoSelection(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
         self.selection_coords = []
-        receipts = [Receipt("3.09.2019", "10.00"), Receipt("1.09.2019", "1000.52")]
-        self.database = database.Database(receipts)
+#        receipts = [Receipt("3.09.2019", "10.00"), Receipt("1.09.2019", "1000.52")]
+#        self.database = database.Database(receipts)
 
         # set up for the photo - create a scrollable canvas
-        self.photo_frame = tk.Frame(self.root)
+        self.photo_frame = tk.Frame(self)
         self.photo_frame.grid()
 
         self.canvas = tk.Canvas(self.photo_frame, width=800, height=600)
@@ -29,11 +47,9 @@ class Window():
 
         self.bind_selection_events()
 
-        again_button = tk.Button(self.root, text="Load photo",
+        again_button = tk.Button(self, text="Load photo",
                                  command=self.load_photo)
         again_button.grid()
-
-        self.root.mainloop()
 
     def create_scrollbars(self):
         # create and set horizontal scrollbar for the photo
@@ -164,8 +180,15 @@ class Window():
                 # gather correct input and save it to the knowledge-base
                 recognized = self.teach()
 
+<<<<<<< HEAD
             self.database.add_receipt(Receipt("10.09.2019", recognized))
             print(self.database)
+=======
+
+            self.controller.show_frame("DatabaseEntryForm")
+#            self.database.add_receipt(Receipt("10.09.2019", recognized))
+#            print(self.database)
+>>>>>>> master
 
     def rectify_selection_coords(self):
         # if needed swap coordinates so they define a rectanle in order:
@@ -198,3 +221,11 @@ class Window():
             self.image.save_correct_recognition(amount)
 
         return amount
+<<<<<<< HEAD
+=======
+
+class DatabaseEntryForm(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame(self, parent)
+        self.controller = controller
+>>>>>>> master
