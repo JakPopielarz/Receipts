@@ -37,9 +37,6 @@ class Photo(Image.Image):
         self.image = image
 
     def create_contours(self):
-#        self.image = ImageEnhance.Contrast(self.image).enhance(10)
-#        self.image = self.image.filter(ImageFilter.SHARPEN)
-
         cv2_image = self.PIL_to_cv2()
 
         prepared_image = self.transform_cv2_image(cv2_image)

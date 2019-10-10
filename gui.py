@@ -26,10 +26,15 @@ class Window(tk.Tk):
         self.frames["DatabaseEntryForm"].grid(row=0, column=0, sticky="nsew")
 
         self.show_frame("PhotoSelection")
+#        self.show_frame("DatabaseEntryForm")
 
     def show_frame(self, frame_name):
         frame = self.frames[frame_name]
         frame.tkraise()
+
+    def pass_amount_to(self, receiver_frame_name, amount):
+        frame = self.frames[receiver_frame_name]
+        frame.amount_label.config(text="Amount: "+amount)
 
 class PhotoSelection(tk.Frame):
     def __init__(self, parent, controller):
@@ -180,8 +185,6 @@ class PhotoSelection(tk.Frame):
                                              """Were the digits recognized correctly?\n
                                              Recognized: """+recognized)
 
-            self.controller.show_frame("DatabaseEntryForm")
-            
 #            if correct:
 #                # add samples to the knowledge-base
 #                self.image.save_correct_recognition(recognized)
@@ -189,6 +192,8 @@ class PhotoSelection(tk.Frame):
 #                # gather correct input and save it to the knowledge-base
 #                recognized = self.teach()
 #
+            self.controller.pass_amount_to("DatabaseEntryForm", recognized)
+            self.controller.show_frame("DatabaseEntryForm")
 ##            self.database.add_receipt(Receipt("10.09.2019", recognized))
 ##            print(self.database)
 
@@ -228,6 +233,57 @@ class DatabaseEntryForm(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        
-        self.tmp = tk.Label(self, text="Welp, we got here. What now?")
-        self.tmp.pack()
+
+        amount = ""
+        self.amount_label = tk.Label(self, text="Amount: "+amount)
+        self.amount_label.grid(row=0, column=0, columnspan=2)
+
+        # create a field to enter the year value and a validation function for it
+        self.year_label = tk.Label(self, text="Year:")
+        year_vcmd = (self.register(self.validate_year))
+        self.year_field = tk.Entry(self, validate="all", validatecommand=(year_vcmd, "%P"))
+        self.year_field.insert("end", "2019")
+
+        self.year_label.grid(row=1, column=0)
+        self.year_field.grid(row=1, column=1)
+
+        # create a field to chose the month
+        self.month_label = tk.Label(self, text="Month:")
+        self.month_field = tk.Listbox(self, height=12, selectbackground="light blue")
+        for month in ("January", "February", "March", "April", "May", "June",
+                      "July", "August", "September", "October", "November",
+                      "December"):
+            self.month_field.insert("end", month)
+        self.month_field.selection_set(0)
+
+        self.month_label.grid(row=2, column=0)
+        self.month_field.grid(row=2, column=1)
+
+        # create a field to enter the day value and a validation function for it
+        self.day_label = tk.Label(self, text="Day:")
+        day_vcmd = (self.register(self.validate_day))
+        self.day_field = tk.Entry(self, validate="all", validatecommand=(day_vcmd, "%P"))
+        self.day_field.insert("end", "1")
+
+        self.day_label.grid(row=3, column=0)
+        self.day_field.grid(row=3, column=1)
+
+        self.add_button = tk.Button(self, text="Add receipt to database")
+        self.add_button.grid(row=4, columnspan=2)
+
+    def validate_year(self, text):
+        return str.isdigit(text) or text == ""
+
+    def validate_day(self, text):
+        days_in_month = {"January": 31, "February": 29, "March": 31, "April": 30,
+                         "May": 31, "June": 30, "July": 31, "August":31,
+                         "September": 30, "October": 31, "November": 30,
+                         "December": 31}
+        month = self.month_field.get("active")
+
+        if str.isdigit(text) and 0 < int(text) <= days_in_month[month]:
+            return True
+        elif text == "":
+            return True
+        else:
+            return False
