@@ -27,7 +27,7 @@ class Photo(Image.Image):
     def crop_image(self, coordinates):
         self.image = self.image.crop(coordinates)
 
-    def resize(self, size=(200,200)):
+    def resize_photo(self, size=(200, 200)):
         self.image.thumbnail(size, Image.ANTIALIAS)
 
     def get_PIL(self):
@@ -86,7 +86,6 @@ class Photo(Image.Image):
     def create_bounding_rectangles(self):
         for contour in self.contours:
             x, y, width, height = cv2.boundingRect(contour)
-# TODO: Change the hard-coded 30
             if height > 30:
                 self.bounding_rectangles.append([x, y, x+width, y+height])
         self.bounding_rectangles.sort(key=lambda x: x[0])

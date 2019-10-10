@@ -9,7 +9,7 @@ from receipt import Receipt
 
 class Window(tk.Tk):
     def __init__(self, *args, **kwargs):
-        tk.Tk.__init__(*args, **kwargs)
+        tk.Tk.__init__(self, *args, **kwargs)
         self.title("Receipts")
 
         container = tk.Frame(self)
@@ -18,7 +18,13 @@ class Window(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        
+
+        self.frames["PhotoSelection"] = PhotoSelection(container, self)
+        self.frames["DatabaseEntryForm"] = DatabaseEntryForm(container, self)
+
+        self.frames["PhotoSelection"].grid(row=0, column=0, sticky="nsew")
+        self.frames["DatabaseEntryForm"].grid(row=0, column=0, sticky="nsew")
+
         self.show_frame("PhotoSelection")
 
     def show_frame(self, frame_name):
@@ -147,7 +153,7 @@ class PhotoSelection(tk.Frame):
 
             # crop and swap the image stored
             self.image.crop_image(self.selection_coords)
-            self.image.resize()
+            self.image.resize_photo()
             self.image.create_contours()
 #            self.image.draw_contours()
             self.image.create_bounding_rectangles()
@@ -173,22 +179,18 @@ class PhotoSelection(tk.Frame):
             correct = tk.messagebox.askyesno("Digit recognition",
                                              """Were the digits recognized correctly?\n
                                              Recognized: """+recognized)
-            if correct:
-                # add samples to the knowledge-base
-                self.image.save_correct_recognition(recognized)
-            else:
-                # gather correct input and save it to the knowledge-base
-                recognized = self.teach()
-
-<<<<<<< HEAD
-            self.database.add_receipt(Receipt("10.09.2019", recognized))
-            print(self.database)
-=======
 
             self.controller.show_frame("DatabaseEntryForm")
-#            self.database.add_receipt(Receipt("10.09.2019", recognized))
-#            print(self.database)
->>>>>>> master
+            
+#            if correct:
+#                # add samples to the knowledge-base
+#                self.image.save_correct_recognition(recognized)
+#            else:
+#                # gather correct input and save it to the knowledge-base
+#                recognized = self.teach()
+#
+##            self.database.add_receipt(Receipt("10.09.2019", recognized))
+##            print(self.database)
 
     def rectify_selection_coords(self):
         # if needed swap coordinates so they define a rectanle in order:
@@ -215,17 +217,17 @@ class PhotoSelection(tk.Frame):
 
     def teach(self):
         # collect correct input from user and add it to the knowledge-base
-        amount = simpledialog.askstring("Correct amount", 
+        amount = simpledialog.askstring("Correct amount",
                                         "Enter correct amount [always with 2 digits after coma]")
         if amount and len(amount) == len(self.image.bounding_rectangles)+1:
             self.image.save_correct_recognition(amount)
 
         return amount
-<<<<<<< HEAD
-=======
 
 class DatabaseEntryForm(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame(self, parent)
+        tk.Frame.__init__(self, parent)
         self.controller = controller
->>>>>>> master
+        
+        self.tmp = tk.Label(self, text="Welp, we got here. What now?")
+        self.tmp.pack()
