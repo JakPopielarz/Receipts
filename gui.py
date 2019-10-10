@@ -4,15 +4,37 @@ from tkinter import filedialog, simpledialog
 import tkinter as tk
 from PIL import ImageTk
 import photo
+import database
+from receipt import Receipt
 
-class Window():
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("Receipts")
+class Window(tk.Tk):
+    def __init__(self, *args, **kwargs):
+        tk.Tk.__init__(*args, **kwargs)
+        self.title("Receipts")
+
+        container = tk.Frame(self)
+        container.pack(side="top", fill="both", expand=True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+
+        self.frames = {}
+        
+        self.show_frame("PhotoSelection")
+
+    def show_frame(self, frame_name):
+        frame = self.frames[frame_name]
+        frame.tkraise()
+
+class PhotoSelection(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
         self.selection_coords = []
+#        receipts = [Receipt("3.09.2019", "10.00"), Receipt("1.09.2019", "1000.52")]
+#        self.database = database.Database(receipts)
 
         # set up for the photo - create a scrollable canvas
-        self.photo_frame = tk.Frame(self.root)
+        self.photo_frame = tk.Frame(self)
         self.photo_frame.grid()
 
         self.canvas = tk.Canvas(self.photo_frame, width=800, height=600)
@@ -25,11 +47,9 @@ class Window():
 
         self.bind_selection_events()
 
-        again_button = tk.Button(self.root, text="Load photo",
+        again_button = tk.Button(self, text="Load photo",
                                  command=self.load_photo)
         again_button.grid()
-
-        self.root.mainloop()
 
     def create_scrollbars(self):
         # create and set horizontal scrollbar for the photo
@@ -127,6 +147,7 @@ class Window():
 
             # crop and swap the image stored
             self.image.crop_image(self.selection_coords)
+            self.image.resize()
             self.image.create_contours()
 #            self.image.draw_contours()
             self.image.create_bounding_rectangles()
@@ -157,7 +178,12 @@ class Window():
                 self.image.save_correct_recognition(recognized)
             else:
                 # gather correct input and save it to the knowledge-base
-                self.teach()
+                recognized = self.teach()
+
+
+            self.controller.show_frame("DatabaseEntryForm")
+#            self.database.add_receipt(Receipt("10.09.2019", recognized))
+#            print(self.database)
 
     def rectify_selection_coords(self):
         # if needed swap coordinates so they define a rectanle in order:
@@ -188,3 +214,10 @@ class Window():
                                         "Enter correct amount [always with 2 digits after coma]")
         if amount and len(amount) == len(self.image.bounding_rectangles)+1:
             self.image.save_correct_recognition(amount)
+
+        return amount
+
+class DatabaseEntryForm(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame(self, parent)
+        self.controller = controller
