@@ -27,12 +27,14 @@ class Photo(Image.Image):
     def crop_image(self, coordinates):
         self.image = self.image.crop(coordinates)
 
+    def resize(self, size=(200,200)):
+        self.image.thumbnail(size, Image.ANTIALIAS)
+
     def get_PIL(self):
         return self.image
 
     def change_image(self, image):
         self.image = image
-#        self.image.thumbnail((600, 600), Image.ANTIALIAS)
 
     def create_contours(self):
 #        self.image = ImageEnhance.Contrast(self.image).enhance(10)
@@ -170,12 +172,12 @@ class Photo(Image.Image):
             # add the result to the end-result string
             recognized += str(int((results[0][0])))
 
-        recognized = recognized[:-2]+","+recognized[-2:]
+        recognized = recognized[:-2]+"."+recognized[-2:]
 
         return recognized
 
     def save_correct_recognition(self, results):
-        results = results.replace(",", "")
+        results = results.replace(".", "")
         for i in range(len(self.bounding_rectangles)):
             # prepare and add sample to the knowledge-base
             roi = self.prepare_sample(i)

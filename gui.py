@@ -4,12 +4,16 @@ from tkinter import filedialog, simpledialog
 import tkinter as tk
 from PIL import ImageTk
 import photo
+import database
+from receipt import Receipt
 
 class Window():
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Receipts")
         self.selection_coords = []
+        receipts = [Receipt("3.09.2019", "10.00"), Receipt("1.09.2019", "1000.52")]
+        self.database = database.Database(receipts)
 
         # set up for the photo - create a scrollable canvas
         self.photo_frame = tk.Frame(self.root)
@@ -127,6 +131,7 @@ class Window():
 
             # crop and swap the image stored
             self.image.crop_image(self.selection_coords)
+            self.image.resize()
             self.image.create_contours()
 #            self.image.draw_contours()
             self.image.create_bounding_rectangles()
@@ -157,7 +162,10 @@ class Window():
                 self.image.save_correct_recognition(recognized)
             else:
                 # gather correct input and save it to the knowledge-base
-                self.teach()
+                recognized = self.teach()
+
+            self.database.add_receipt(Receipt("10.09.2019", recognized))
+            print(self.database)
 
     def rectify_selection_coords(self):
         # if needed swap coordinates so they define a rectanle in order:
@@ -188,3 +196,5 @@ class Window():
                                         "Enter correct amount [always with 2 digits after coma]")
         if amount and len(amount) == len(self.image.bounding_rectangles)+1:
             self.image.save_correct_recognition(amount)
+
+        return amount
