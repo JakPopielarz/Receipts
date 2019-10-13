@@ -3,4 +3,5 @@ __pycache__/*
 *.jpeg
 *.jpg
 .spyproject
+*.csv
 *.data
