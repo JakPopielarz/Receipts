@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from tkinter import filedialog, simpledialog
+from tkinter import filedialog, simpledialog, messagebox
 import tkinter as tk
 from PIL import ImageTk
 import photo
@@ -16,6 +16,8 @@ class Window(tk.Tk):
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
+
+        self.database = database.Database()
 
         self.frames = {}
 
@@ -34,6 +36,7 @@ class Window(tk.Tk):
 
     def pass_amount_to(self, receiver_frame_name, amount):
         frame = self.frames[receiver_frame_name]
+        frame.amount = amount
         frame.amount_label.config(text="Amount: "+amount)
 
 class PhotoSelection(tk.Frame):
@@ -234,14 +237,15 @@ class DatabaseEntryForm(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        amount = ""
-        self.amount_label = tk.Label(self, text="Amount: "+amount)
+        self.amount = ""
+        self.amount_label = tk.Label(self, text="Amount: "+ self.amount)
         self.amount_label.grid(row=0, column=0, columnspan=2)
 
         # create a field to enter the year value and a validation function for it
         self.year_label = tk.Label(self, text="Year:")
         year_vcmd = (self.register(self.validate_year))
-        self.year_field = tk.Entry(self, validate="all", validatecommand=(year_vcmd, "%P"))
+        self.year_field = tk.Entry(self, validate="all", validatecommand=(year_vcmd, "%P"),
+                                   exportselection=False)
         self.year_field.insert("end", "2019")
 
         self.year_label.grid(row=1, column=0)
@@ -262,13 +266,15 @@ class DatabaseEntryForm(tk.Frame):
         # create a field to enter the day value and a validation function for it
         self.day_label = tk.Label(self, text="Day:")
         day_vcmd = (self.register(self.validate_day))
-        self.day_field = tk.Entry(self, validate="all", validatecommand=(day_vcmd, "%P"))
+        self.day_field = tk.Entry(self, validate="all", validatecommand=(day_vcmd, "%P"),
+                                  exportselection=False)
         self.day_field.insert("end", "1")
 
         self.day_label.grid(row=3, column=0)
         self.day_field.grid(row=3, column=1)
 
-        self.add_button = tk.Button(self, text="Add receipt to database")
+        self.add_button = tk.Button(self, text="Add receipt to database",
+                                    command=self.add_receipt)
         self.add_button.grid(row=4, columnspan=2)
 
     def validate_year(self, text):
@@ -281,9 +287,21 @@ class DatabaseEntryForm(tk.Frame):
                          "December": 31}
         month = self.month_field.get("active")
 
-        if str.isdigit(text) and 0 < int(text) <= days_in_month[month]:
+        if (str.isdigit(text) and 0 < int(text) <= days_in_month[month]) or\
+        text == "":
             return True
-        elif text == "":
-            return True
+        return False
+
+    def add_receipt(self):
+        if self.validate_year(self.year_field.get()) and\
+        self.validate_day(self.day_field.get()):
+            date = self.day_field.get() + "." + str(self.month_field.curselection()[0]+1)
+            date += "." + self.year_field.get()
+
+            self.controller.database.add_receipt(Receipt(date, self.amount))
+        elif not self.validate_day(self.day_field.get()):
+            self.day_field.config(fg="red")
+        elif not self.validate_year(self.year_field.get()):
+            self.year_field.config(fg="red")
         else:
-            return False
+            messagebox.showinfo("Ooops", "Something went wrong")

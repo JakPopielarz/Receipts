@@ -18,5 +18,5 @@ class Receipt():
     def __str__(self):
         date = self.date.values()
         date = [str(x) for x in date]
-        
+
         return "Date: " + ".".join(date) + "; Amount: " + str(self.amount)
