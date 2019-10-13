@@ -195,10 +195,9 @@ class PhotoSelection(tk.Frame):
 #                # gather correct input and save it to the knowledge-base
 #                recognized = self.teach()
 #
+            self.canvas.delete("photo")
             self.controller.pass_amount_to("DatabaseEntryForm", recognized)
             self.controller.show_frame("DatabaseEntryForm")
-##            self.database.add_receipt(Receipt("10.09.2019", recognized))
-##            print(self.database)
 
     def rectify_selection_coords(self):
         # if needed swap coordinates so they define a rectanle in order:
@@ -237,9 +236,12 @@ class DatabaseEntryForm(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
+        row_index=0
+
         self.amount = ""
         self.amount_label = tk.Label(self, text="Amount: "+ self.amount)
-        self.amount_label.grid(row=0, column=0, columnspan=2)
+        self.amount_label.grid(row=row_index, column=0, columnspan=2)
+        row_index += 1
 
         # create a field to enter the year value and a validation function for it
         self.year_label = tk.Label(self, text="Year:")
@@ -248,8 +250,9 @@ class DatabaseEntryForm(tk.Frame):
                                    exportselection=False)
         self.year_field.insert("end", "2019")
 
-        self.year_label.grid(row=1, column=0)
-        self.year_field.grid(row=1, column=1)
+        self.year_label.grid(row=row_index, column=0)
+        self.year_field.grid(row=row_index, column=1)
+        row_index += 1
 
         # create a field to chose the month
         self.month_label = tk.Label(self, text="Month:")
@@ -260,8 +263,9 @@ class DatabaseEntryForm(tk.Frame):
             self.month_field.insert("end", month)
         self.month_field.selection_set(0)
 
-        self.month_label.grid(row=2, column=0)
-        self.month_field.grid(row=2, column=1)
+        self.month_label.grid(row=row_index, column=0)
+        self.month_field.grid(row=row_index, column=1)
+        row_index += 1
 
         # create a field to enter the day value and a validation function for it
         self.day_label = tk.Label(self, text="Day:")
@@ -270,12 +274,20 @@ class DatabaseEntryForm(tk.Frame):
                                   exportselection=False)
         self.day_field.insert("end", "1")
 
-        self.day_label.grid(row=3, column=0)
-        self.day_field.grid(row=3, column=1)
+        self.day_label.grid(row=row_index, column=0)
+        self.day_field.grid(row=row_index, column=1)
+        row_index += 1
 
         self.add_button = tk.Button(self, text="Add receipt to database",
                                     command=self.add_receipt)
-        self.add_button.grid(row=4, columnspan=2)
+        self.add_button.grid(row=row_index, columnspan=2)
+        row_index += 1
+
+        self.load_photo_button = tk.Button(self, text="Load another photo",
+                                           command=
+                                           lambda: self.controller.show_frame("PhotoSelection"))
+        self.load_photo_button.grid(row=row_index, columnspan=2)
+        row_index += 1
 
     def validate_year(self, text):
         return str.isdigit(text) or text == ""
