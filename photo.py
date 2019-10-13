@@ -9,7 +9,7 @@ class Photo(Image.Image):
     def __init__(self, image_path):
         super().__init__()
         self.image = Image.open(image_path)
-#        self.image.thumbnail((600, 600), Image.ANTIALIAS)
+        self.resize_photo()
         self.bounding_rectangles = []
         self.samples = np.empty((0, 100))
         self.responses = []
@@ -27,8 +27,10 @@ class Photo(Image.Image):
     def crop_image(self, coordinates):
         self.image = self.image.crop(coordinates)
 
-    def resize_photo(self, size=(200, 200)):
-        self.image.thumbnail(size, Image.ANTIALIAS)
+    def resize_photo(self, height=800):
+        height_proportion = height / float(self.image.size[1])
+        new_width = int(float(self.image.size[0]) * float(height_proportion))
+        self.image = self.image.resize((height, new_width), Image.ANTIALIAS)
 
     def get_PIL(self):
         return self.image
@@ -83,7 +85,7 @@ class Photo(Image.Image):
     def create_bounding_rectangles(self):
         for contour in self.contours:
             x, y, width, height = cv2.boundingRect(contour)
-            if height > 30:
+            if height > 20:
                 self.bounding_rectangles.append([x, y, x+width, y+height])
         self.bounding_rectangles.sort(key=lambda x: x[0])
 
@@ -98,8 +100,6 @@ class Photo(Image.Image):
 #        self.separate_bounding_rectangles()
 
     def separate_bounding_rectangles(self):
-        self.image = ImageEnhance.Contrast(self.image).enhance(10000)
-        image = self.image.filter(ImageFilter.SHARPEN)
         for rectangle in self.bounding_rectangles:
             rectangle[0] += 1
             rectangle[1] += 1

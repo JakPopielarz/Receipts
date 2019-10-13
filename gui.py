@@ -161,7 +161,6 @@ class PhotoSelection(tk.Frame):
 
             # crop and swap the image stored
             self.image.crop_image(self.selection_coords)
-            self.image.resize_photo()
             self.image.create_contours()
 #            self.image.draw_contours()
             self.image.create_bounding_rectangles()
