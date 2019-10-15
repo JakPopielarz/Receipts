@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from PIL import Image, ImageFilter, ImageEnhance, ImageDraw
+from PIL import Image, ImageDraw
 import cv2
 import numpy as np
 
@@ -103,7 +103,7 @@ class Photo(Image.Image):
         for rectangle in self.bounding_rectangles:
             rectangle[0] += 1
             rectangle[1] += 1
-            cropped = image.crop(rectangle)
+            cropped = self.image.crop(rectangle)
             name = str(rectangle[0])+".png"
             cropped.save(name)
 

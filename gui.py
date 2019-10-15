@@ -12,6 +12,7 @@ class Window(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title("Receipts")
 
+        # create a container for all screens
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
@@ -19,33 +20,59 @@ class Window(tk.Tk):
 
         self.database = database.Database()
 
+        # create and prepare all the screens
         self.frames = {}
 
+        self.frames["MainMenu"] = MainMenu(container, self)
         self.frames["PhotoSelection"] = PhotoSelection(container, self)
         self.frames["DatabaseEntryForm"] = DatabaseEntryForm(container, self)
 
+        self.frames["MainMenu"].grid(row=0, column=0, sticky="nsew")
         self.frames["PhotoSelection"].grid(row=0, column=0, sticky="nsew")
         self.frames["DatabaseEntryForm"].grid(row=0, column=0, sticky="nsew")
 
-        self.show_frame("PhotoSelection")
-#        self.show_frame("DatabaseEntryForm")
+        # display the first screen
+#        self.show_frame("PhotoSelection")
+        self.show_frame("MainMenu")
 
     def show_frame(self, frame_name):
         frame = self.frames[frame_name]
         frame.tkraise()
+        
+        if frame_name == "PhotoSelection":
+            frame.load_photo()
 
     def pass_amount_to(self, receiver_frame_name, amount):
         frame = self.frames[receiver_frame_name]
         frame.amount = amount
         frame.amount_label.config(text="Amount: "+amount)
 
+class MainMenu(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+
+        instructions = """---INSTRUCTIONS---
+
+- Select a photo to analyze -
+- Click, hold and drag to select area with the sum (cannot change the selection after releasing LMB) -
+- approve or rectify the recognition -
+- choose a date for the receipt, add it to the database -
+- repeat, if you wish -
+"""
+
+        self.about = tk.Label(self, text=instructions)
+        self.about.pack()
+
+        self.go_button = tk.Button(self, text="Load photo",
+                                   command=lambda: self.controller.show_frame("PhotoSelection"))
+        self.go_button.pack()
+
 class PhotoSelection(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         self.selection_coords = []
-#        receipts = [Receipt("3.09.2019", "10.00"), Receipt("1.09.2019", "1000.52")]
-#        self.database = database.Database(receipts)
 
         # set up for the photo - create a scrollable canvas
         self.photo_frame = tk.Frame(self)
@@ -54,10 +81,6 @@ class PhotoSelection(tk.Frame):
         self.canvas = tk.Canvas(self.photo_frame, width=800, height=600)
 
         self.create_scrollbars()
-
-        # load photo and set scrollregion so the scrollbars can work properly
-        self.load_photo()
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
         self.bind_selection_events()
 
@@ -98,6 +121,8 @@ class PhotoSelection(tk.Frame):
             if not self.canvas.find_withtag("photo"):
                 self.canvas.create_text(400, 300, tag="text",
                                         text="File not chosen")
+
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def set_canvas_photo(self):
         canvas_img = ImageTk.PhotoImage(self.image.get_PIL())
@@ -187,13 +212,16 @@ class PhotoSelection(tk.Frame):
                                              """Were the digits recognized correctly?\n
                                              Recognized: """+recognized)
 
+             #############################################################
+#             Uncomment following code to save th recognition as samples #
 #            if correct:
 #                # add samples to the knowledge-base
 #                self.image.save_correct_recognition(recognized)
 #            else:
 #                # gather correct input and save it to the knowledge-base
 #                recognized = self.teach()
-#
+             #############################################################
+
             self.canvas.delete("photo")
             self.controller.pass_amount_to("DatabaseEntryForm", recognized)
             self.controller.show_frame("DatabaseEntryForm")

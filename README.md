@@ -1,5 +1,5 @@
 # Receipts
-A fairly simple program to analyse and automatically create a database of receipts. This bases on photos.
+A fairly simple app to analyse and automatically create a database of receipts. This bases on photos.
 
 To achieve the ultimate number recognition a KNNearest algorithm from OpenCV library was employed.
 
@@ -15,13 +15,13 @@ By digging a bit into the code one can disable or enable further deepening of th
 After building it up a bit the generalsamples.data and generalresponses.data (as I call it - knowledge base) will be shared in this repo.
 
 ## Note
-I realise that this program is lacking in some aspects, but it was meant just as a thing that would get summing up receipts done for me.
+I realise that this app is lacking in some aspects, but it was meant just as a thing that would get summing up receipts done for me.
 
 ## Development plans:
-- main menu
 - possibility to change selected area
 - built-in instructions
 - categories for receipts
+- displaying the database from inside the app
 
 # ULTIMATE DEVELOPMENT TARGET:
 Fully automatically recognizing the position of the overall sum and it's amount on the receipt.
