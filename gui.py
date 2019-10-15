@@ -343,10 +343,12 @@ class DatabaseEntryForm(tk.Frame):
         return False
 
     def add_receipt(self):
+        # ask if user wants to save receipt again (if was savd before)
         if self.saved:
             self.saved = not(tk.messagebox.askyesno("Are you sure?",
                                                     "Looks like you already did that. Save again?"))
 
+        # save recceipt if validated
         if self.validate_year(self.year_field.get()) and\
         self.validate_day(self.day_field.get()) and not self.saved:
             date = self.day_field.get() + "." + str(self.month_field.curselection()[0]+1)
@@ -354,18 +356,28 @@ class DatabaseEntryForm(tk.Frame):
 
             self.controller.database.add_receipt(Receipt(date, self.amount))
             self.saved = True
+
+        # if not validate put feedback in appropriate field
         elif not self.validate_day(self.day_field.get()):
             self.day_field.config(fg="red")
         elif not self.validate_year(self.year_field.get()):
             self.year_field.config(fg="red")
+
         elif self.saved:
             pass
+
+        # shouldn't really reach this point ever
+        # but in case it does display something for the user
         else:
             messagebox.showinfo("Ooops", "Something went wrong")
 
     def load_photo(self):
+        # if receipt was saved - select another one
         if self.saved:
             self.controller.show_frame("PhotoSelection")
+
+        # if receipt was not saved - ask if user is sure he wants to proceed
+        # then act accordingly
         else:
             sure = tk.messagebox.askyesno("Are you sure?",
                                           "You didn't save data to the database. Do you want to continue?")
