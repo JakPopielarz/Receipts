@@ -38,7 +38,7 @@ class Window(tk.Tk):
     def show_frame(self, frame_name):
         frame = self.frames[frame_name]
         frame.tkraise()
-        
+
         if frame_name == "PhotoSelection":
             frame.load_photo()
 
@@ -181,6 +181,15 @@ class PhotoSelection(tk.Frame):
         self.select(event)
 
     def select(self, _):
+        chose_selection = tk.messagebox.askyesno("Are you sure?",
+                                                 "Are you sure you want to select this region?")
+
+        if chose_selection:
+            self.analyze_selection()
+        else:
+            self.canvas.delete("selection")
+
+    def analyze_selection(self):
         if self.canvas.find_withtag("photo"):
             self.rectify_selection_coords()
 
@@ -191,6 +200,7 @@ class PhotoSelection(tk.Frame):
             self.image.create_bounding_rectangles()
 
             # gather responses and learning material
+# UNCOMMENT if you want to create a new set of samples for the algorithm to learn
 #            self.teach()
 
             self.image.draw_bounding_rectangles()
@@ -212,15 +222,16 @@ class PhotoSelection(tk.Frame):
                                              """Were the digits recognized correctly?\n
                                              Recognized: """+recognized)
 
-             #############################################################
-#             Uncomment following code to save th recognition as samples #
+#################################################################
+## Uncomment following code to save the recognition as samples ##
+## If commented it's impossible to enter the correct amount by hand ""
 #            if correct:
 #                # add samples to the knowledge-base
 #                self.image.save_correct_recognition(recognized)
 #            else:
 #                # gather correct input and save it to the knowledge-base
 #                recognized = self.teach()
-             #############################################################
+#################################################################
 
             self.canvas.delete("photo")
             self.controller.pass_amount_to("DatabaseEntryForm", recognized)
@@ -263,7 +274,8 @@ class DatabaseEntryForm(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        row_index=0
+        row_index = 0
+        self.saved = False
 
         self.amount = ""
         self.amount_label = tk.Label(self, text="Amount: "+ self.amount)
@@ -311,8 +323,7 @@ class DatabaseEntryForm(tk.Frame):
         row_index += 1
 
         self.load_photo_button = tk.Button(self, text="Load another photo",
-                                           command=
-                                           lambda: self.controller.show_frame("PhotoSelection"))
+                                           command=self.load_photo)
         self.load_photo_button.grid(row=row_index, columnspan=2)
         row_index += 1
 
@@ -332,15 +343,34 @@ class DatabaseEntryForm(tk.Frame):
         return False
 
     def add_receipt(self):
+        if self.saved:
+            self.saved = not(tk.messagebox.askyesno("Are you sure?",
+                                                    "Looks like you already did that. Save again?"))
+
         if self.validate_year(self.year_field.get()) and\
-        self.validate_day(self.day_field.get()):
+        self.validate_day(self.day_field.get()) and not self.saved:
             date = self.day_field.get() + "." + str(self.month_field.curselection()[0]+1)
             date += "." + self.year_field.get()
 
             self.controller.database.add_receipt(Receipt(date, self.amount))
+            self.saved = True
         elif not self.validate_day(self.day_field.get()):
             self.day_field.config(fg="red")
         elif not self.validate_year(self.year_field.get()):
             self.year_field.config(fg="red")
+        elif self.saved:
+            pass
         else:
             messagebox.showinfo("Ooops", "Something went wrong")
+
+    def load_photo(self):
+        if self.saved:
+            self.controller.show_frame("PhotoSelection")
+        else:
+            sure = tk.messagebox.askyesno("Are you sure?",
+                                          "You didn't save data to the database. Do you want to continue?")
+            if sure:
+                self.controller.show_frame("PhotoSelection")
+            else:
+                pass
+        self.saved = False

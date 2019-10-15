@@ -17,9 +17,7 @@ After building it up a bit the generalsamples.data and generalresponses.data (as
 ## Note
 I realise that this app is lacking in some aspects, but it was meant just as a thing that would get summing up receipts done for me.
 
-## Development plans:
-- possibility to change selected area
-- built-in instructions
+## Development plans
 - categories for receipts
 - displaying the database from inside the app
 
