@@ -27,10 +27,14 @@ class Photo(Image.Image):
     def crop_image(self, coordinates):
         self.image = self.image.crop(coordinates)
 
-    def resize_photo(self, height=800):
+    def select_fragment(self, coordinates):
+        self.crop_image(coordinates)
+        self.resize_photo(50)
+
+    def resize_photo(self, height=600):
         height_proportion = height / float(self.image.size[1])
         new_width = int(float(self.image.size[0]) * float(height_proportion))
-        self.image = self.image.resize((height, new_width), Image.ANTIALIAS)
+        self.image = self.image.resize((new_width, height), Image.ANTIALIAS)
 
     def get_PIL(self):
         return self.image
@@ -85,7 +89,7 @@ class Photo(Image.Image):
     def create_bounding_rectangles(self):
         for contour in self.contours:
             x, y, width, height = cv2.boundingRect(contour)
-            if height > 20:
+            if height > 35:
                 self.bounding_rectangles.append([x, y, x+width, y+height])
         self.bounding_rectangles.sort(key=lambda x: x[0])
 
@@ -137,7 +141,6 @@ class Photo(Image.Image):
     def save_results(self):
         self.responses = np.array(self.responses, np.float32)
         self.responses = self.responses.reshape((self.responses.size, 1))
-        print("training complete")
 
         np.savetxt('generalsamples.data', self.samples)
         np.savetxt('generalresponses.data', self.responses)

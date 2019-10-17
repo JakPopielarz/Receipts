@@ -10,7 +10,7 @@ from receipt import Receipt
 class Window(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        
+
         self.title("Receipts")
 
         # create a container for all screens
@@ -105,6 +105,10 @@ class PhotoSelection(tk.Frame):
 
     def load_photo(self):
         self.canvas.delete("text")
+        
+        if self.canvas.find_withtag("photo"):
+            self.canvas.delete("photo")
+        
         try:
             image_path = filedialog.askopenfilename(title="Select photo of a receipt",
                                                     filetypes=(("jpeg files", "*.jpg"),
@@ -194,7 +198,7 @@ class PhotoSelection(tk.Frame):
             self.rectify_selection_coords()
 
             # crop and swap the image stored
-            self.image.crop_image(self.selection_coords)
+            self.image.select_fragment(self.selection_coords)
             self.image.create_contours()
 #            self.image.draw_contours()
             self.image.create_bounding_rectangles()
@@ -222,20 +226,22 @@ class PhotoSelection(tk.Frame):
                                              """Were the digits recognized correctly?\n
                                              Recognized: """+recognized)
 
-#################################################################
-## Uncomment following code to save the recognition as samples ##
-## If commented it's impossible to enter the correct amount by hand ""
-#            if correct:
-#                # add samples to the knowledge-base
-#                self.image.save_correct_recognition(recognized)
-#            else:
-#                # gather correct input and save it to the knowledge-base
-#                recognized = self.teach()
-#################################################################
+            # change to False if you do not want the app to create new samples
+            will_teach = True
+            if will_teach:
+                if correct:
+                    # add samples to the knowledge-base
+                    self.image.save_correct_recognition(recognized)
+                else:
+                    # gather correct input and save it to the knowledge-base
+                    recognized = self.teach()
+            else:
+                recognized = self.get_correct_recognition()
 
             self.canvas.delete("photo")
-            self.controller.pass_amount_to("DatabaseEntryForm", recognized)
-            self.controller.show_frame("DatabaseEntryForm")
+            if recognized:
+                self.controller.pass_amount_to("DatabaseEntryForm", recognized)
+                self.controller.show_frame("DatabaseEntryForm")
 
     def rectify_selection_coords(self):
         # if needed swap coordinates so they define a rectanle in order:
@@ -260,11 +266,29 @@ class PhotoSelection(tk.Frame):
             self.canvas.create_text(400, 300, tag="text",
                                     text="File not chosen")
 
+    def get_correct_recognition(self):
+        # collect correct input from user
+        amount = ""
+        message=""
+        number_of_rectangles = len(self.image.bounding_rectangles)+1
+        
+        while len(amount) != number_of_rectangles:
+            amount = simpledialog.askstring("Correct amount",
+                                            message +\
+                                            "Enter correct amount [always with 2 digits after coma]")
+            if not amount:
+                self.controller.show_frame("PhotoSelection")
+                break
+            elif len(amount) < number_of_rectangles:
+                message = "Too few characters entered"
+            else:
+                message = "Too many characters entered"
+
+        return amount
+
     def teach(self):
-        # collect correct input from user and add it to the knowledge-base
-        amount = simpledialog.askstring("Correct amount",
-                                        "Enter correct amount [always with 2 digits after coma]")
-        if amount and len(amount) == len(self.image.bounding_rectangles)+1:
+        amount = self.get_correct_recognition()
+        if amount:
             self.image.save_correct_recognition(amount)
 
         return amount
