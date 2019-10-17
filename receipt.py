@@ -27,7 +27,12 @@ class Receipt():
         
         if type(tags) == str and tags != "":
             self.tags.append(tags)
+
         elif type(tags) == list:
+            for tag in tags:
+                if tag == "":
+                    tags.remove(tag)
+
             self.tags = self.tags + tags
 
     def __str__(self):

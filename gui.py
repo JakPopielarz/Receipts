@@ -105,10 +105,10 @@ class PhotoSelection(tk.Frame):
 
     def load_photo(self):
         self.canvas.delete("text")
-        
+
         if self.canvas.find_withtag("photo"):
             self.canvas.delete("photo")
-        
+
         try:
             image_path = filedialog.askopenfilename(title="Select photo of a receipt",
                                                     filetypes=(("jpeg files", "*.jpg"),
@@ -227,7 +227,7 @@ class PhotoSelection(tk.Frame):
                                              Recognized: """+recognized)
 
             # change to False if you do not want the app to create new samples
-            will_teach = True
+            will_teach = False
             if will_teach:
                 if correct:
                     # add samples to the knowledge-base
@@ -271,7 +271,7 @@ class PhotoSelection(tk.Frame):
         amount = ""
         message=""
         number_of_rectangles = len(self.image.bounding_rectangles)+1
-        
+
         while len(amount) != number_of_rectangles:
             amount = simpledialog.askstring("Correct amount",
                                             message +\
@@ -300,6 +300,12 @@ class DatabaseEntryForm(tk.Frame):
 
         row_index = 0
         self.saved = False
+
+        # create a space for messages for the user
+        self.message = tk.Label(self)
+        self.message.grid(row=row_index, column=0, columnspan=4)
+
+        row_index += 1
 
         # display the recognized amount
         self.amount = ""
@@ -411,6 +417,7 @@ class DatabaseEntryForm(tk.Frame):
             self.controller.database.add_receipt(Receipt(date, self.amount, tags))
             self.update_tags()
             self.saved = True
+            self.message.config(text="Receipt saved succesfully!", fg="green")
 
         # if not validate put feedback in appropriate field
         elif not self.validate_day(self.day_field.get()):

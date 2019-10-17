@@ -18,7 +18,7 @@ After building it up a bit the generalsamples.data and generalresponses.data (as
 I realise that this app is lacking in some aspects, but it was meant just as a thing that would get summing up receipts done for me.
 
 ## Development plans
-- categories for receipts
+- displaying the photo whilst adding it to database (for ease of for example looking up it's date
 - displaying the database from inside the app
 
 # ULTIMATE DEVELOPMENT TARGET:
