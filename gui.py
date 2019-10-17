@@ -10,6 +10,7 @@ from receipt import Receipt
 class Window(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+        
         self.title("Receipts")
 
         # create a container for all screens
@@ -32,7 +33,6 @@ class Window(tk.Tk):
         self.frames["DatabaseEntryForm"].grid(row=0, column=0, sticky="nsew")
 
         # display the first screen
-#        self.show_frame("PhotoSelection")
         self.show_frame("MainMenu")
 
     def show_frame(self, frame_name):
@@ -54,8 +54,8 @@ class MainMenu(tk.Frame):
 
         instructions = """---INSTRUCTIONS---
 
-- Select a photo to analyze -
-- Click, hold and drag to select area with the sum (cannot change the selection after releasing LMB) -
+- select a photo to analyze -
+- click, hold and drag to select area with the sum (cannot change the selection after releasing LMB) -
 - approve or rectify the recognition -
 - choose a date for the receipt, add it to the database -
 - repeat, if you wish -
@@ -277,9 +277,16 @@ class DatabaseEntryForm(tk.Frame):
         row_index = 0
         self.saved = False
 
+        # display the recognized amount
         self.amount = ""
         self.amount_label = tk.Label(self, text="Amount: "+ self.amount)
         self.amount_label.grid(row=row_index, column=0, columnspan=2)
+
+        # instruct the user how to enter tags
+        self.tags_disclaimer = tk.Label(self, text="ENTER TAGS SEPARATED WITH A COMA AND SPACE",
+                                        fg="blue")
+        self.tags_disclaimer.grid(row=row_index, column=2, columnspan=2)
+
         row_index += 1
 
         # create a field to enter the year value and a validation function for it
@@ -291,6 +298,16 @@ class DatabaseEntryForm(tk.Frame):
 
         self.year_label.grid(row=row_index, column=0)
         self.year_field.grid(row=row_index, column=1)
+
+        # display available tags
+        self.current_tags_label = tk.Label(self, text="Current tags: ")
+        self.current_tags_listed = tk.Label(self, text=self.controller.database.get_tags(),
+                                            justify="left")
+
+        self.current_tags_label.grid(row=row_index, column=2)
+        self.current_tags_listed.grid(row=row_index, column=3, rowspan=2, sticky="n")
+        self.current_tags_listed["wraplength"] = 500 - self.current_tags_listed.winfo_rootx()
+
         row_index += 1
 
         # create a field to chose the month
@@ -304,6 +321,7 @@ class DatabaseEntryForm(tk.Frame):
 
         self.month_label.grid(row=row_index, column=0)
         self.month_field.grid(row=row_index, column=1)
+
         row_index += 1
 
         # create a field to enter the day value and a validation function for it
@@ -315,16 +333,26 @@ class DatabaseEntryForm(tk.Frame):
 
         self.day_label.grid(row=row_index, column=0)
         self.day_field.grid(row=row_index, column=1)
+
+        # create a field for tags
+        self.tags_entry_label = tk.Label(self, text="Tags:")
+        self.tags_field = tk.Entry(self, exportselection=False)
+
+        self.tags_entry_label.grid(row=row_index, column=2)
+        self.tags_field.grid(row=row_index, column=3)
+
         row_index += 1
 
         self.add_button = tk.Button(self, text="Add receipt to database",
                                     command=self.add_receipt)
-        self.add_button.grid(row=row_index, columnspan=2)
+        self.add_button.grid(row=row_index, columnspan=4, sticky="nsew")
+
         row_index += 1
 
         self.load_photo_button = tk.Button(self, text="Load another photo",
                                            command=self.load_photo)
-        self.load_photo_button.grid(row=row_index, columnspan=2)
+        self.load_photo_button.grid(row=row_index, columnspan=4, sticky="nsew")
+
         row_index += 1
 
     def validate_year(self, text):
@@ -354,7 +382,10 @@ class DatabaseEntryForm(tk.Frame):
             date = self.day_field.get() + "." + str(self.month_field.curselection()[0]+1)
             date += "." + self.year_field.get()
 
-            self.controller.database.add_receipt(Receipt(date, self.amount))
+            tags = self.tags_field.get().split(", ")
+
+            self.controller.database.add_receipt(Receipt(date, self.amount, tags))
+            self.update_tags()
             self.saved = True
 
         # if not validate put feedback in appropriate field
@@ -380,9 +411,13 @@ class DatabaseEntryForm(tk.Frame):
         # then act accordingly
         else:
             sure = tk.messagebox.askyesno("Are you sure?",
-                                          "You didn't save data to the database. Do you want to continue?")
+                                          """You didn't save data to the database.
+                                          Do you want to continue?""")
             if sure:
                 self.controller.show_frame("PhotoSelection")
             else:
                 pass
         self.saved = False
+
+    def update_tags(self):
+        self.current_tags_listed["text"] = self.controller.database.get_tags()

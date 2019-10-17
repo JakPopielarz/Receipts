@@ -19,7 +19,11 @@ class Database():
                 read_file = csv.reader(csv_file)
 
                 for row in list(read_file)[1:]:
-                    self.receipts.append(Receipt(row[:-1], row[-1]))
+                    tags = row[-1]
+                    tags = tags[1:-1]
+                    tags = tags.replace("'", "")
+                    tags = tags.split(", ")
+                    self.receipts.append(Receipt(row[:-2], row[-2], tags))
 
         except FileNotFoundError:
             self.receipts = []
@@ -28,7 +32,11 @@ class Database():
         with open("receipts_summation.csv", "a") as file:
             csv_file = csv.writer(file)
             if new_csv:
-                csv_file.writerow(["day", "month", "year", "amount"])
+                csv_file.writerow(["day", "month", "year", "amount", "tags"])
+
+        self.available_tags = []
+        for receipt in self.receipts:
+            self.available_tags = self.available_tags + receipt.tags
 
     def __str__(self):
         string = ""
@@ -39,6 +47,11 @@ class Database():
 
     def add_receipt(self, bill):
         self.receipts.append(bill)
+        self.available_tags = self.available_tags + bill.tags
         with open("receipts_summation.csv", "a") as file:
             csv_file = csv.writer(file)
             csv_file.writerow(bill.to_list())
+
+    def get_tags(self):
+        return ", ".join(set(self.available_tags))
+#        return ", ".join(self.available_tags)

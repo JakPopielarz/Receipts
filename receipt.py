@@ -7,7 +7,7 @@ Created on Thu Oct 10 11:21:47 2019
 """
 
 class Receipt():
-    def __init__(self, date, amount):
+    def __init__(self, date, amount, tags):
         if type(date) == str:
             date = date.split(".")
             self.date = {"day": int(date[0]),
@@ -19,10 +19,20 @@ class Receipt():
                          "year": int(date[2])}
 
         self.amount = float(amount)
+        
+        months = ["", "January", "February", "March", "April", "May", "June",
+                  "July", "August", "September", "October", "November",
+                  "December"]
+        self.tags = [months[self.date["month"]]]
+        
+        if type(tags) == str and tags != "":
+            self.tags.append(tags)
+        elif type(tags) == list:
+            self.tags = self.tags + tags
 
     def __str__(self):
-
-        return "Date: " + self.get_printable_date() + "; Amount: " + str(self.amount)
+        return "Date: " + self.get_printable_date() + "; Amount: " + str(self.amount) +\
+                "; Tags: " + ", ".join(self.tags) 
 
     def get_printable_date(self):
         date = self.date.values()
@@ -33,5 +43,6 @@ class Receipt():
     def to_list(self):
         arr = list(self.date.values())
         arr.append(self.amount)
+        arr.append(self.tags)
 
         return arr
