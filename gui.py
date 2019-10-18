@@ -32,15 +32,21 @@ class Window(tk.Tk):
         self.frames["PhotoSelection"].grid(row=0, column=0, sticky="nsew")
         self.frames["DatabaseEntryForm"].grid(row=0, column=0, sticky="nsew")
 
+        self.width = container.winfo_width()
+
+        for frame in self.frames.values():
+            self.width = max(self.width, frame.winfo_width())
+
         # display the first screen
         self.show_frame("MainMenu")
 
     def show_frame(self, frame_name):
         frame = self.frames[frame_name]
-        frame.tkraise()
 
         if frame_name == "PhotoSelection":
             frame.load_photo()
+
+        frame.tkraise()
 
     def pass_amount_to(self, receiver_frame_name, amount):
         frame = self.frames[receiver_frame_name]
@@ -373,15 +379,16 @@ class DatabaseEntryForm(tk.Frame):
 
         row_index += 1
 
+        # create buttons
         self.add_button = tk.Button(self, text="Add receipt to database",
                                     command=self.add_receipt)
-        self.add_button.grid(row=row_index, columnspan=4, sticky="nsew")
+        self.add_button.grid(row=row_index, columnspan=5, sticky="ew")
 
         row_index += 1
 
         self.load_photo_button = tk.Button(self, text="Load another photo",
                                            command=self.load_photo)
-        self.load_photo_button.grid(row=row_index, columnspan=4, sticky="nsew")
+        self.load_photo_button.grid(row=row_index, columnspan=5, sticky="ew")
 
         row_index += 1
 
