@@ -8,8 +8,11 @@ import numpy as np
 class Photo(Image.Image):
     def __init__(self, image_path):
         super().__init__()
-        self.image = Image.open(image_path)
-        self.resize_photo()
+        if image_path == "":
+            self.image = Image.new("RGB", (500, 600), color="white")
+        else:
+            self.image = Image.open(image_path)
+            self.resize_photo()
         self.bounding_rectangles = []
         self.samples = np.empty((0, 100))
         self.responses = []

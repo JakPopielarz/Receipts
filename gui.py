@@ -53,6 +53,19 @@ class Window(tk.Tk):
         frame.amount = amount
         frame.amount_label.config(text="Amount: "+amount)
 
+    def pass_photo_to(self, receiver_frame_name, photo_obj):
+        frame = self.frames[receiver_frame_name]
+        frame.photo = photo_obj
+
+    def update_database_photo(self):
+        frame = self.frames["DatabaseEntryForm"]
+        canvas_img = ImageTk.PhotoImage(frame.photo.get_PIL())
+        frame.canvas.create_image(0, 0, anchor="nw", tag="photo",
+                                 image=canvas_img)
+        frame.canvas.image = canvas_img
+
+        frame.canvas.configure(scrollregion=frame.canvas.bbox("photo"))
+
 class MainMenu(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -123,6 +136,7 @@ class PhotoSelection(tk.Frame):
             self.image = photo.Photo(image_path)
             self.set_canvas_photo()
             self.canvas.focus_set()
+            self.controller.pass_photo_to("DatabaseEntryForm", self.image)
         except OSError: # if user chose a file which is not an image
             self.canvas.delete("photo")
             self.canvas.create_text(400, 300, tag="text",
@@ -195,6 +209,7 @@ class PhotoSelection(tk.Frame):
                                                  "Are you sure you want to select this region?")
 
         if chose_selection:
+            self.controller.update_database_photo()
             self.analyze_selection()
         else:
             self.canvas.delete("selection")
@@ -275,7 +290,7 @@ class PhotoSelection(tk.Frame):
     def get_correct_recognition(self):
         # collect correct input from user
         amount = ""
-        message=""
+        message = ""
         number_of_rectangles = len(self.image.bounding_rectangles)+1
 
         while len(amount) != number_of_rectangles:
@@ -302,7 +317,10 @@ class PhotoSelection(tk.Frame):
 class DatabaseEntryForm(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        self.rowconfigure(7, weight=1)
+        
         self.controller = controller
+        self.photo = photo.Photo("")
 
         row_index = 0
         self.saved = False
@@ -392,6 +410,26 @@ class DatabaseEntryForm(tk.Frame):
 
         row_index += 1
 
+        # display the photo of receipt under the form
+        frame_height = 600 - self.load_photo_button.winfo_rooty() -\
+                        self.load_photo_button.winfo_height()
+
+        self.photo_frame = tk.Frame(self)
+        self.photo_frame.grid(row=row_index, columnspan=4, sticky="nsew")
+
+        row_index += 1
+
+        self.canvas = tk.Canvas(self.photo_frame, width=800)
+
+        canvas_img = ImageTk.PhotoImage(self.photo.get_PIL())
+        self.canvas.create_image(0, 0, anchor="nw", tag="photo",
+                                 image=canvas_img)
+        self.canvas.image = canvas_img
+        
+        self.create_scrollbars()
+
+        self.canvas.configure(scrollregion=self.canvas.bbox("photo"))
+
     def validate_year(self, text):
         return str.isdigit(text) or text == ""
 
@@ -459,3 +497,19 @@ class DatabaseEntryForm(tk.Frame):
 
     def update_tags(self):
         self.current_tags_listed["text"] = self.controller.database.get_tags()
+
+    
+    def create_scrollbars(self):
+        # create and set horizontal scrollbar for the photo
+        self.scroll_x = tk.Scrollbar(self.photo_frame, orient="horizontal",
+                                     command=self.canvas.xview)
+        self.scroll_x.pack(side="bottom", fill="x")
+
+        # create and set vertical scrollbar for the photo
+        self.scroll_y = tk.Scrollbar(self.photo_frame, orient="vertical",
+                                     command=self.canvas.yview)
+        self.scroll_y.pack(side="right", fill="y")
+
+        self.canvas.configure(yscrollcommand=self.scroll_y.set,
+                              xscrollcommand=self.scroll_x.set)
+        self.canvas.pack(side="left", fill="both", expand=True)
