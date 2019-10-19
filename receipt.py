@@ -48,6 +48,7 @@ class Receipt():
     def to_list(self):
         arr = list(self.date.values())
         arr.append(self.amount)
-        arr.append(self.tags)
+        tags_str = " ".join(self.tags)
+        arr.append(tags_str)
 
         return arr

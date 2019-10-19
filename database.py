@@ -16,13 +16,11 @@ class Database():
 
         try:
             with open("receipts_summation.csv", "r") as csv_file:
-                read_file = csv.reader(csv_file)
+                read_file = csv.reader(csv_file, quoting=csv.QUOTE_NONE, escapechar="\\")
 
                 for row in list(read_file)[1:]:
                     tags = row[-1]
-                    tags = tags[1:-1]
-                    tags = tags.replace("'", "")
-                    tags = tags.split(", ")
+                    tags = tags.split(" ")
                     self.receipts.append(Receipt(row[:-2], row[-2], tags))
 
         except FileNotFoundError:
@@ -30,7 +28,7 @@ class Database():
             new_csv = True
 
         with open("receipts_summation.csv", "a") as file:
-            csv_file = csv.writer(file)
+            csv_file = csv.writer(file, quoting=csv.QUOTE_NONE, escapechar="\\")
             if new_csv:
                 csv_file.writerow(["day", "month", "year", "amount", "tags"])
 
@@ -49,7 +47,7 @@ class Database():
         self.receipts.append(bill)
         self.available_tags = self.available_tags + bill.tags
         with open("receipts_summation.csv", "a") as file:
-            csv_file = csv.writer(file)
+            csv_file = csv.writer(file, quoting=csv.QUOTE_NONE, escapechar="\\")
             csv_file.writerow(bill.to_list())
 
     def get_tags(self):
