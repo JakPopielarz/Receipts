@@ -248,7 +248,7 @@ class PhotoSelection(tk.Frame):
                                              Recognized: """+recognized)
 
             # change to False if you do not want the app to create new samples
-            will_teach = False
+            will_teach = True
             if will_teach:
                 if correct:
                     # add samples to the knowledge-base
@@ -411,9 +411,6 @@ class DatabaseEntryForm(tk.Frame):
         row_index += 1
 
         # display the photo of receipt under the form
-        frame_height = 600 - self.load_photo_button.winfo_rooty() -\
-                        self.load_photo_button.winfo_height()
-
         self.photo_frame = tk.Frame(self)
         self.photo_frame.grid(row=row_index, columnspan=4, sticky="nsew")
 
@@ -481,6 +478,7 @@ class DatabaseEntryForm(tk.Frame):
     def load_photo(self):
         # if receipt was saved - select another one
         if self.saved:
+            self.message.config(text="")
             self.controller.show_frame("PhotoSelection")
 
         # if receipt was not saved - ask if user is sure he wants to proceed
