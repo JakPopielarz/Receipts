@@ -4,4 +4,3 @@ __pycache__/*
 *.jpg
 .spyproject
 *.csv
-*.data
